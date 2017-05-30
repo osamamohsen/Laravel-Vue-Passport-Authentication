@@ -31,34 +31,9 @@
 </template>
 
 <script>
-    import {loginUrl} from './config.js';
+    import {loginUrl , getHeader , userDataUrl} from './config.js';
     import {clientId , clientSecret} from './env';
 export default {
-//  name: 'app',
-//  created () {
-//    const postData = {
-//      grant_type: 'password',
-//      client_id: 4,
-//      client_secret: 'XT0ae1fiG6d49hSn6cfB2q3iFiYZxgk1C6tGCHLL',
-//      username: 'osama@gmail.com',
-//      password: 'secret',
-//      scope: ''
-//    };
-//    this.$http.post('http://localhost:8000/oauth/token',postData)
-//        .then(response => {
-//            console.log(response);
-//            const token = response.body.access_token;
-//            const header = {
-//              'Accept': 'application/json',
-//              'Authorization': 'Bearer '+ token
-//            };
-//            this.$http.get('http://localhost:8000/api/user',{ headers: header})
-//              .then(response => {
-//                  console.log(response);
-//              });
-//        });
-//  }
-
     data () {
         return {
             login: {
@@ -77,9 +52,22 @@ export default {
                 password : this.login.password,
                 scope    : ''
             };
+            const authUser = {};
             this.$http.post(loginUrl,userData)
                     .then(response => {
-                            console.log(response);
+                            if(response.status == 200){
+                                authUser.access_token = response.data.access_token;
+                                authUser.refresh_token = response.data.refresh_token;
+                                window.localStorage.setItem('authUser',JSON.stringify(authUser));
+                                this.$http.get(userDataUrl,{headers : getHeader()})
+                                .then(userResponse => {
+                                    console.log(userResponse);
+                                    authUser.email = userResponse.body.email;
+                                    authUser.name = userResponse.body.name;
+                                    window.localStorage.setItem('authUser',JSON.stringify(authUser));
+                                    this.$router.push({name : 'dashboard'});
+                                });
+                            }
             });
         }
     }
